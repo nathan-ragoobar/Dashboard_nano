@@ -25,9 +25,8 @@ public:
     void show();
     void processEvents();  // Allow UI to update during training
     
-    /*
     static int exec();
-*/
+
     // Prevent copying
     TrainingVisualizer(const TrainingVisualizer&) = delete;
     TrainingVisualizer& operator=(const TrainingVisualizer&) = delete;

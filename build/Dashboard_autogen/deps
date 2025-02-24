@@ -22,7 +22,7 @@ Dashboard_autogen/timestamp: \
 	C:/Qt/6.8.0/mingw_64/include/QtCharts/QCandlestickSeries \
 	C:/Qt/6.8.0/mingw_64/include/QtCharts/QChart \
 	C:/Qt/6.8.0/mingw_64/include/QtCharts/QChartGlobal \
-	C:/Qt/6.8.0/mingw_64/include/QtCharts/QDateTimeAxis \
+	C:/Qt/6.8.0/mingw_64/include/QtCharts/QChartView \
 	C:/Qt/6.8.0/mingw_64/include/QtCharts/QLegend \
 	C:/Qt/6.8.0/mingw_64/include/QtCharts/QLegendMarker \
 	C:/Qt/6.8.0/mingw_64/include/QtCharts/QLineSeries \
@@ -91,8 +91,10 @@ Dashboard_autogen/timestamp: \
 	C:/Qt/6.8.0/mingw_64/include/QtCharts/qxylegendmarker.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCharts/qxymodelmapper.h \
 	C:/Qt/6.8.0/mingw_64/include/QtCharts/qxyseries.h \
+	C:/Qt/6.8.0/mingw_64/include/QtCore/QDateTime \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QDeadlineTimer \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QEvent \
+	C:/Qt/6.8.0/mingw_64/include/QtCore/QFileSystemWatcher \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QHash \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QList \
 	C:/Qt/6.8.0/mingw_64/include/QtCore/QMap \
@@ -1252,4 +1254,5 @@ Dashboard_autogen/timestamp: \
 	C:/msys64/mingw64/share/cmake/Modules/Platform/Windows-windres.cmake \
 	C:/msys64/mingw64/share/cmake/Modules/Platform/Windows.cmake \
 	C:/msys64/mingw64/share/cmake/Modules/Platform/WindowsPaths.cmake \
+	C:/Code3020/Dashboard/mainwindow.ui \
 	C:/msys64/mingw64/bin/cmake.exe

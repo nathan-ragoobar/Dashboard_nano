@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
     }
     */
    // Start the Qt event loop
-   //return TrainingVisualizer::app->exec();
+   return TrainingVisualizer::exec();
 
-    return 0;
+    //return 0;
 }

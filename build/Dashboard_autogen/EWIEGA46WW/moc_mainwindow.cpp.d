@@ -13,7 +13,7 @@ C:/Code3020/Dashboard/build/Dashboard_autogen/EWIEGA46WW/moc_mainwindow.cpp: C:/
   C:/Qt/6.8.0/mingw_64/include/QtCharts/QCandlestickSeries \
   C:/Qt/6.8.0/mingw_64/include/QtCharts/QChart \
   C:/Qt/6.8.0/mingw_64/include/QtCharts/QChartGlobal \
-  C:/Qt/6.8.0/mingw_64/include/QtCharts/QDateTimeAxis \
+  C:/Qt/6.8.0/mingw_64/include/QtCharts/QChartView \
   C:/Qt/6.8.0/mingw_64/include/QtCharts/QLegend \
   C:/Qt/6.8.0/mingw_64/include/QtCharts/QLegendMarker \
   C:/Qt/6.8.0/mingw_64/include/QtCharts/QLineSeries \
@@ -82,8 +82,10 @@ C:/Code3020/Dashboard/build/Dashboard_autogen/EWIEGA46WW/moc_mainwindow.cpp: C:/
   C:/Qt/6.8.0/mingw_64/include/QtCharts/qxylegendmarker.h \
   C:/Qt/6.8.0/mingw_64/include/QtCharts/qxymodelmapper.h \
   C:/Qt/6.8.0/mingw_64/include/QtCharts/qxyseries.h \
+  C:/Qt/6.8.0/mingw_64/include/QtCore/QDateTime \
   C:/Qt/6.8.0/mingw_64/include/QtCore/QDeadlineTimer \
   C:/Qt/6.8.0/mingw_64/include/QtCore/QEvent \
+  C:/Qt/6.8.0/mingw_64/include/QtCore/QFileSystemWatcher \
   C:/Qt/6.8.0/mingw_64/include/QtCore/QHash \
   C:/Qt/6.8.0/mingw_64/include/QtCore/QList \
   C:/Qt/6.8.0/mingw_64/include/QtCore/QMap \
