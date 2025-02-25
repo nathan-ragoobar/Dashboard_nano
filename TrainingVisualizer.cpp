@@ -56,10 +56,13 @@ struct TrainingVisualizer::Private {
     
         // Create all tabs with charts
         createAccuracyTab();
-        createLossTab();
+        //createLossTab();
+        createTrainingLossTab();
+        createValidationLossTab();
         createPerplexityTab();
         createTokensTab();
         createLearningRateTab();
+        
         
     
         window->setCentralWidget(tabWidget);
@@ -210,7 +213,7 @@ struct TrainingVisualizer::Private {
         data.series = series;
         tabData["Learning Rate"] = data;
     }
-
+/*
     void createLossTab() {
         auto widget = new QWidget();
         auto layout = new QVBoxLayout(widget);
@@ -246,6 +249,74 @@ struct TrainingVisualizer::Private {
         data.series = series;
         tabData["Loss"] = data;
     }
+*/
+    void createTrainingLossTab() {
+        auto widget = new QWidget();
+        auto layout = new QVBoxLayout(widget);
+
+        auto chart = new QChart();
+        series = new QLineSeries(chart);
+        chart->addSeries(series);
+        chart->setTitle("Training Loss Over Time");
+
+        auto axisX = new QDateTimeAxis;
+        axisX->setTitleText("Time");
+        axisX->setFormat("hh:mm:ss");
+
+        auto axisY = new QValueAxis;
+        axisY->setTitleText("Training Loss");
+        axisY->setRange(0, 1);
+
+        chart->addAxis(axisX, Qt::AlignBottom);
+        chart->addAxis(axisY, Qt::AlignLeft);
+        series->attachAxis(axisX);
+        series->attachAxis(axisY);
+
+        chartView = new QChartView(chart);
+        chartView->setRenderHint(QPainter::Antialiasing);
+        layout->addWidget(chartView);
+
+        tabWidget->addTab(widget, "Training Loss");
+
+        TabData data;
+        data.chartView = chartView;
+        data.series = series;
+        tabData["Training Loss"] = data;
+    }
+
+    void createValidationLossTab() {
+        auto widget = new QWidget();
+        auto layout = new QVBoxLayout(widget);
+
+        auto chart = new QChart();
+        series = new QLineSeries(chart);
+        chart->addSeries(series);
+        chart->setTitle("Validation Loss Over Time");
+
+        auto axisX = new QDateTimeAxis;
+        axisX->setTitleText("Time");
+        axisX->setFormat("hh:mm:ss");
+
+        auto axisY = new QValueAxis;
+        axisY->setTitleText("Validation Loss");
+        axisY->setRange(0, 1);
+
+        chart->addAxis(axisX, Qt::AlignBottom);
+        chart->addAxis(axisY, Qt::AlignLeft);
+        series->attachAxis(axisX);
+        series->attachAxis(axisY);
+
+        chartView = new QChartView(chart);
+        chartView->setRenderHint(QPainter::Antialiasing);
+        layout->addWidget(chartView);
+
+        tabWidget->addTab(widget, "Validation Loss");
+
+        TabData data;
+        data.chartView = chartView;
+        data.series = series;
+        tabData["Validation Loss"] = data;
+    }
 
     void loadDataFromFile(const QString& fileName) {
         // If a file is already being watched, remove it:
@@ -272,7 +343,8 @@ struct TrainingVisualizer::Private {
         // Create a mapping from tab names to CSV column names
         QMap<QString, QString> tabToHeader {
             {"Accuracy", "accuracy"},
-            {"Loss", "loss"},
+            {"Training Loss", "training_loss"},
+            {"Validation Loss", "validation_loss"},
             {"Perplexity", "perplexity"},
             {"Tokens", "tokens_per_second"},
             {"Learning Rate", "learning_rate"},
