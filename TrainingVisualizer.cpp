@@ -78,9 +78,9 @@ struct TrainingVisualizer::Private {
         chart->setTitle("Training Accuracy Over Time");
     
         // Create axes
-        auto axisX = new QDateTimeAxis;
-        axisX->setTitleText("Time");
-        axisX->setFormat("hh:mm:ss");
+        auto axisX = new QValueAxis;
+        axisX->setTitleText("Steps");  // Updated label
+        axisX->setLabelFormat("%i");   // Integer format for steps
         
         auto axisY = new QValueAxis;
         axisY->setTitleText("Accuracy");
@@ -115,10 +115,10 @@ struct TrainingVisualizer::Private {
         chart->setTitle("Perplexity Over Time");
     
         // Create axes
-        auto axisX = new QDateTimeAxis;
-        axisX->setTitleText("Time");
-        axisX->setFormat("hh:mm:ss");
-        
+        auto axisX = new QValueAxis;
+        axisX->setTitleText("Steps");  // Updated label
+        axisX->setLabelFormat("%i");   // Integer format for steps
+            
         auto axisY = new QValueAxis;
         axisY->setTitleText("Perplexity");
         axisY->setRange(0, 1);
@@ -152,9 +152,9 @@ struct TrainingVisualizer::Private {
         chart->setTitle("Tokens Per Second Over Time");
     
         // Create axes
-        auto axisX = new QDateTimeAxis;
-        axisX->setTitleText("Time");
-        axisX->setFormat("hh:mm:ss");
+        auto axisX = new QValueAxis;
+        axisX->setTitleText("Steps");  // Updated label
+        axisX->setLabelFormat("%i");   // Integer format for steps
         
         auto axisY = new QValueAxis;
         axisY->setTitleText("Tokens/Second");
@@ -188,9 +188,9 @@ struct TrainingVisualizer::Private {
         chart->setTitle("Learning Rate Over Time");
     
         // Create axes
-        auto axisX = new QDateTimeAxis;
-        axisX->setTitleText("Time");
-        axisX->setFormat("hh:mm:ss");
+        auto axisX = new QValueAxis;
+        axisX->setTitleText("Steps");  // Updated label
+        axisX->setLabelFormat("%i");   // Integer format for steps
         
         auto axisY = new QValueAxis;
         axisY->setTitleText("Learning Rate");
@@ -259,9 +259,9 @@ struct TrainingVisualizer::Private {
         chart->addSeries(series);
         chart->setTitle("Training Loss Over Time");
 
-        auto axisX = new QDateTimeAxis;
-        axisX->setTitleText("Time");
-        axisX->setFormat("hh:mm:ss");
+        auto axisX = new QValueAxis;
+        axisX->setTitleText("Steps");  // Updated label
+        axisX->setLabelFormat("%i");   // Integer format for steps
 
         auto axisY = new QValueAxis;
         axisY->setTitleText("Training Loss");
@@ -293,9 +293,9 @@ struct TrainingVisualizer::Private {
         chart->addSeries(series);
         chart->setTitle("Validation Loss Over Time");
 
-        auto axisX = new QDateTimeAxis;
-        axisX->setTitleText("Time");
-        axisX->setFormat("hh:mm:ss");
+        auto axisX = new QValueAxis;
+        axisX->setTitleText("Steps");  // Updated label
+        axisX->setLabelFormat("%i");   // Integer format for steps
 
         auto axisY = new QValueAxis;
         axisY->setTitleText("Validation Loss");
@@ -343,8 +343,8 @@ struct TrainingVisualizer::Private {
         // Create a mapping from tab names to CSV column names
         QMap<QString, QString> tabToHeader {
             {"Accuracy", "accuracy"},
-            {"Training Loss", "training_loss"},
-            {"Validation Loss", "validation_loss"},
+            {"Training Loss", "train_loss"},
+            {"Validation Loss", "val_loss"},
             {"Perplexity", "perplexity"},
             {"Tokens", "tokens_per_second"},
             {"Learning Rate", "learning_rate"},
@@ -359,6 +359,14 @@ struct TrainingVisualizer::Private {
         QTextStream in(&file);
         QString headerLine = in.readLine();
         QStringList headers = headerLine.split(',');
+
+        // Find the steps column
+        int stepsIndex = headers.indexOf("Step");  // Add this
+        if (stepsIndex < 0) {
+            qDebug() << "No 'step' column found in CSV";
+            file.close();
+            return;
+        }
     
         // Identify each tab’s CSV column index and create its series
         for (auto it = tabData.begin(); it != tabData.end(); ++it) {
@@ -375,13 +383,18 @@ struct TrainingVisualizer::Private {
         }
     
         // Read each line, parse timestamp & add data points for every tab that has a valid column
+        int currentStep = 0;  // Fallback if no step column
         while (!in.atEnd()) {
             QString line = in.readLine();
             QStringList fields = line.split(',');
             if (fields.size() < 2) continue;
     
-            QDateTime timestamp = QDateTime::fromString(fields[0], "yyyy-MM-dd'T'HH:mm:ss");
-            if (!timestamp.isValid()) continue;
+            // Get step value
+            bool ok;
+            double step = fields[stepsIndex].toDouble(&ok);
+            if (!ok) {
+                step = currentStep++;  // Use incremental step if parsing fails
+            }
     
             // For each tab with a known column, parse and append data
             for (auto it = tabColumnIndex.begin(); it != tabColumnIndex.end(); ++it) {
@@ -396,12 +409,12 @@ struct TrainingVisualizer::Private {
                 double value = valueStr.toDouble(&ok);
                 if (!ok) continue;
     
-                newSeriesMap[tabName]->append(timestamp.toMSecsSinceEpoch(), value);
+                newSeriesMap[tabName]->append(step, value);  // Use step instead of timestamp
             }
         }
         file.close();
     
-        // Update each tab’s chart
+        // Update each tab's chart
         for (auto it = newSeriesMap.begin(); it != newSeriesMap.end(); ++it) {
             QString tabName = it.key();
             QLineSeries* series = it.value();
@@ -418,12 +431,12 @@ struct TrainingVisualizer::Private {
             series->attachAxis(chart->axes(Qt::Vertical).first());
     
             // Update X axis range
-            auto xAxis = qobject_cast<QDateTimeAxis*>(chart->axes(Qt::Horizontal).first());
+            auto xAxis = qobject_cast<QValueAxis*>(chart->axes(Qt::Horizontal).first());
             if (xAxis) {
-                xAxis->setRange(
-                    QDateTime::fromMSecsSinceEpoch(series->at(0).x()),
-                    QDateTime::fromMSecsSinceEpoch(series->at(series->count() - 1).x())
-                );
+                double minX = series->at(0).x();
+                double maxX = series->at(series->count() - 1).x();
+                double padding = (maxX - minX) * 0.1;
+                xAxis->setRange(minX - padding, maxX + padding);
             }
     
             // Update Y axis range with padding
