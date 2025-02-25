@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QtCharts>
 #include <QVBoxLayout>
+#include <QFileSystemWatcher>
 
 std::unique_ptr<QApplication> TrainingVisualizer::app;
 
@@ -19,6 +20,8 @@ struct TrainingVisualizer::Private {
     QMap<QString, TabData> tabData;
     QChartView* chartView;  // Add these member variables
     QLineSeries* series;    // for backward compatibility
+    QFileSystemWatcher fileWatcher;
+    QString lastFileName;
     
     Private() : window(std::make_unique<QMainWindow>()),
                 tabWidget(nullptr),
@@ -245,6 +248,21 @@ struct TrainingVisualizer::Private {
     }
 
     void loadDataFromFile(const QString& fileName) {
+        // If a file is already being watched, remove it:
+        if (!lastFileName.isEmpty()) {
+            fileWatcher.removePath(lastFileName);
+        }
+
+        // Start watching the new file
+        fileWatcher.addPath(fileName);
+        lastFileName = fileName;
+
+        // When the file changes, reload data
+        QObject::connect(&fileWatcher, &QFileSystemWatcher::fileChanged, [this](const QString &path){
+            // Reload data if file is modified
+            loadDataFromFile(path);
+        });
+        
         QFile file(fileName);
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
             qDebug() << "Failed to open file";
@@ -273,13 +291,13 @@ struct TrainingVisualizer::Private {
         // Identify each tab’s CSV column index and create its series
         for (auto it = tabData.begin(); it != tabData.end(); ++it) {
             QString tabName = it.key();
-            if (!tabToHeader.contains(tabName))
+            if (!tabToHeader.contains(tabName)){
                 continue; // Skip if we don’t have a header mapping for this tab
-    
+            }
             int colIndex = headers.indexOf(tabToHeader[tabName]);
-            if (colIndex < 0)
+            if (colIndex < 0){
                 continue; // Skip if column not found in the CSV
-    
+            }
             tabColumnIndex[tabName] = colIndex;
             newSeriesMap[tabName] = new QLineSeries();
         }
