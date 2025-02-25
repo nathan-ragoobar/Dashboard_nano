@@ -76,6 +76,9 @@ struct TrainingVisualizer::Private {
         series = new QLineSeries(chart);
         chart->addSeries(series);
         chart->setTitle("Training Accuracy Over Time");
+
+        // Enable hover events on the chart
+        chart->setAcceptHoverEvents(true);
     
         // Create axes
         auto axisX = new QValueAxis;
@@ -93,11 +96,34 @@ struct TrainingVisualizer::Private {
     
         chartView = new QChartView(chart);
         chartView->setRenderHint(QPainter::Antialiasing);
+
+        // Enable rubber-band zooming and panning
+        chartView->setRubberBand(QChartView::RectangleRubberBand);
+        chartView->setDragMode(QGraphicsView::ScrollHandDrag);
+
+        // Optionally show data points
+        series->setPointsVisible(true);
+
+        // Create a local pointer to chartView to capture
+        QChartView* localChartView = chartView;
+
+        // Connect hover signal to show tooltips
+        QObject::connect(series, &QLineSeries::hovered, chartView,
+                        [localChartView](const QPointF &point, bool state) {
+            if (state) {
+                QToolTip::showText(
+                    QCursor::pos(),
+                    QString("Step: %1\nValue: %2").arg(point.x()).arg(point.y()),
+                    localChartView
+                );
+            } else {
+                QToolTip::hideText();
+            }
+        });
+
         layout->addWidget(chartView);
-    
         tabWidget->addTab(widget, "Accuracy");
 
-        // Store the tab data
         TabData data;
         data.chartView = chartView;
         data.series = series;
@@ -113,6 +139,9 @@ struct TrainingVisualizer::Private {
         series = new QLineSeries(chart);
         chart->addSeries(series);
         chart->setTitle("Perplexity Over Time");
+
+        // Enable hover events on the chart
+        chart->setAcceptHoverEvents(true);
     
         // Create axes
         auto axisX = new QValueAxis;
@@ -130,11 +159,34 @@ struct TrainingVisualizer::Private {
     
         chartView = new QChartView(chart);
         chartView->setRenderHint(QPainter::Antialiasing);
+
+        // Enable rubber-band zooming and panning
+        chartView->setRubberBand(QChartView::RectangleRubberBand);
+        chartView->setDragMode(QGraphicsView::ScrollHandDrag);
+
+        // Optionally show data points
+        series->setPointsVisible(true);
+
+        // Create a local pointer to chartView to capture
+        QChartView* localChartView = chartView;
+
+        // Connect hover signal to show tooltips
+        QObject::connect(series, &QLineSeries::hovered, chartView,
+                        [localChartView](const QPointF &point, bool state) {
+            if (state) {
+                QToolTip::showText(
+                    QCursor::pos(),
+                    QString("Step: %1\nValue: %2").arg(point.x()).arg(point.y()),
+                    localChartView
+                );
+            } else {
+                QToolTip::hideText();
+            }
+        });
+
         layout->addWidget(chartView);
-    
         tabWidget->addTab(widget, "Perplexity");
 
-        // Store the tab data
         TabData data;
         data.chartView = chartView;
         data.series = series;
@@ -150,6 +202,9 @@ struct TrainingVisualizer::Private {
         series = new QLineSeries(chart);
         chart->addSeries(series);
         chart->setTitle("Tokens Per Second Over Time");
+
+        // Enable hover events on the chart
+        chart->setAcceptHoverEvents(true);
     
         // Create axes
         auto axisX = new QValueAxis;
@@ -167,11 +222,34 @@ struct TrainingVisualizer::Private {
     
         chartView = new QChartView(chart);
         chartView->setRenderHint(QPainter::Antialiasing);
+
+        // Enable rubber-band zooming and panning
+        chartView->setRubberBand(QChartView::RectangleRubberBand);
+        chartView->setDragMode(QGraphicsView::ScrollHandDrag);
+
+        // Optionally show data points
+        series->setPointsVisible(true);
+
+        // Create a local pointer to chartView to capture
+        QChartView* localChartView = chartView;
+
+        // Connect hover signal to show tooltips
+        QObject::connect(series, &QLineSeries::hovered, chartView,
+                        [localChartView](const QPointF &point, bool state) {
+            if (state) {
+                QToolTip::showText(
+                    QCursor::pos(),
+                    QString("Step: %1\nValue: %2").arg(point.x()).arg(point.y()),
+                    localChartView
+                );
+            } else {
+                QToolTip::hideText();
+            }
+        });
+
         layout->addWidget(chartView);
-    
         tabWidget->addTab(widget, "Tokens");
 
-        // Store the tab data
         TabData data;
         data.chartView = chartView;
         data.series = series;
@@ -187,6 +265,9 @@ struct TrainingVisualizer::Private {
         chart->addSeries(series);
         chart->setTitle("Learning Rate Over Time");
     
+        // Enable hover events on the chart
+        chart->setAcceptHoverEvents(true);
+
         // Create axes
         auto axisX = new QValueAxis;
         axisX->setTitleText("Steps");  // Updated label
@@ -203,11 +284,34 @@ struct TrainingVisualizer::Private {
     
         chartView = new QChartView(chart);
         chartView->setRenderHint(QPainter::Antialiasing);
+
+        // Enable rubber-band zooming and panning
+        chartView->setRubberBand(QChartView::RectangleRubberBand);
+        chartView->setDragMode(QGraphicsView::ScrollHandDrag);
+
+        // Optionally show data points
+        series->setPointsVisible(true);
+
+        // Create a local pointer to chartView to capture
+        QChartView* localChartView = chartView;
+
+        // Connect hover signal to show tooltips
+        QObject::connect(series, &QLineSeries::hovered, chartView,
+                        [localChartView](const QPointF &point, bool state) {
+            if (state) {
+                QToolTip::showText(
+                    QCursor::pos(),
+                    QString("Step: %1\nValue: %2").arg(point.x()).arg(point.y()),
+                    localChartView
+                );
+            } else {
+                QToolTip::hideText();
+            }
+        });
+
         layout->addWidget(chartView);
-    
         tabWidget->addTab(widget, "Learning Rate");
 
-        // Store the tab data
         TabData data;
         data.chartView = chartView;
         data.series = series;
@@ -259,6 +363,9 @@ struct TrainingVisualizer::Private {
         chart->addSeries(series);
         chart->setTitle("Training Loss Over Time");
 
+        // Enable hover events on the chart
+        chart->setAcceptHoverEvents(true);
+
         auto axisX = new QValueAxis;
         axisX->setTitleText("Steps");  // Updated label
         axisX->setLabelFormat("%i");   // Integer format for steps
@@ -274,8 +381,32 @@ struct TrainingVisualizer::Private {
 
         chartView = new QChartView(chart);
         chartView->setRenderHint(QPainter::Antialiasing);
-        layout->addWidget(chartView);
 
+        // Enable rubber-band zooming and panning
+        chartView->setRubberBand(QChartView::RectangleRubberBand);
+        chartView->setDragMode(QGraphicsView::ScrollHandDrag);
+
+        // Optionally show data points
+        series->setPointsVisible(true);
+
+        // Create a local pointer to chartView to capture
+        QChartView* localChartView = chartView;
+
+        // Connect hover signal to show tooltips
+        QObject::connect(series, &QLineSeries::hovered, chartView,
+                        [localChartView](const QPointF &point, bool state) {
+            if (state) {
+                QToolTip::showText(
+                    QCursor::pos(),
+                    QString("Step: %1\nValue: %2").arg(point.x()).arg(point.y()),
+                    localChartView
+                );
+            } else {
+                QToolTip::hideText();
+            }
+        });
+
+        layout->addWidget(chartView);
         tabWidget->addTab(widget, "Training Loss");
 
         TabData data;
@@ -292,7 +423,11 @@ struct TrainingVisualizer::Private {
         series = new QLineSeries(chart);
         chart->addSeries(series);
         chart->setTitle("Validation Loss Over Time");
+        
+        // Enable hover events on the chart
+        chart->setAcceptHoverEvents(true);
 
+        // Create axes
         auto axisX = new QValueAxis;
         axisX->setTitleText("Steps");  // Updated label
         axisX->setLabelFormat("%i");   // Integer format for steps
@@ -308,8 +443,32 @@ struct TrainingVisualizer::Private {
 
         chartView = new QChartView(chart);
         chartView->setRenderHint(QPainter::Antialiasing);
-        layout->addWidget(chartView);
 
+        // Enable rubber-band zooming and panning
+        chartView->setRubberBand(QChartView::RectangleRubberBand);
+        chartView->setDragMode(QGraphicsView::ScrollHandDrag);
+
+        // Optionally show data points
+        series->setPointsVisible(true);
+
+        // Create a local pointer to chartView to capture
+        QChartView* localChartView = chartView;
+
+        // Connect hover signal to show tooltips
+        QObject::connect(series, &QLineSeries::hovered, chartView,
+                        [localChartView](const QPointF &point, bool state) {
+            if (state) {
+                QToolTip::showText(
+                    QCursor::pos(),
+                    QString("Step: %1\nValue: %2").arg(point.x()).arg(point.y()),
+                    localChartView
+                );
+            } else {
+                QToolTip::hideText();
+            }
+        });
+
+        layout->addWidget(chartView);
         tabWidget->addTab(widget, "Validation Loss");
 
         TabData data;
