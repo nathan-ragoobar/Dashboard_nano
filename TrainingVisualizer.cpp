@@ -8,10 +8,17 @@
 std::unique_ptr<QApplication> TrainingVisualizer::app;
 
 struct TrainingVisualizer::Private {
+    struct TabData {
+        QChartView* chartView;
+        QLineSeries* series;
+        TabData() : chartView(nullptr), series(nullptr) {}
+    };
+
     std::unique_ptr<QMainWindow> window;
     QTabWidget* tabWidget;
-    QChartView* chartView;
-    QLineSeries* series;
+    QMap<QString, TabData> tabData;
+    QChartView* chartView;  // Add these member variables
+    QLineSeries* series;    // for backward compatibility
     
     Private() : window(std::make_unique<QMainWindow>()),
                 tabWidget(nullptr),
@@ -46,10 +53,11 @@ struct TrainingVisualizer::Private {
     
         // Create all tabs with charts
         createAccuracyTab();
+        createLossTab();
         createPerplexityTab();
         createTokensTab();
         createLearningRateTab();
-        createNormRateTab();
+        
     
         window->setCentralWidget(tabWidget);
     }
@@ -82,6 +90,12 @@ struct TrainingVisualizer::Private {
         layout->addWidget(chartView);
     
         tabWidget->addTab(widget, "Accuracy");
+
+        // Store the tab data
+        TabData data;
+        data.chartView = chartView;
+        data.series = series;
+        tabData["Accuracy"] = data;
     }
     
     // Add similar methods for other tabs
@@ -92,7 +106,7 @@ struct TrainingVisualizer::Private {
         auto chart = new QChart();
         series = new QLineSeries(chart);
         chart->addSeries(series);
-        chart->setTitle("Training Accuracy Over Time");
+        chart->setTitle("Perplexity Over Time");
     
         // Create axes
         auto axisX = new QDateTimeAxis;
@@ -100,7 +114,7 @@ struct TrainingVisualizer::Private {
         axisX->setFormat("hh:mm:ss");
         
         auto axisY = new QValueAxis;
-        axisY->setTitleText("Accuracy");
+        axisY->setTitleText("Perplexity");
         axisY->setRange(0, 1);
     
         chart->addAxis(axisX, Qt::AlignBottom);
@@ -113,6 +127,12 @@ struct TrainingVisualizer::Private {
         layout->addWidget(chartView);
     
         tabWidget->addTab(widget, "Perplexity");
+
+        // Store the tab data
+        TabData data;
+        data.chartView = chartView;
+        data.series = series;
+        tabData["Perplexity"] = data;
     }
 
 
@@ -123,7 +143,7 @@ struct TrainingVisualizer::Private {
         auto chart = new QChart();
         series = new QLineSeries(chart);
         chart->addSeries(series);
-        chart->setTitle("Training Accuracy Over Time");
+        chart->setTitle("Tokens Per Second Over Time");
     
         // Create axes
         auto axisX = new QDateTimeAxis;
@@ -131,7 +151,7 @@ struct TrainingVisualizer::Private {
         axisX->setFormat("hh:mm:ss");
         
         auto axisY = new QValueAxis;
-        axisY->setTitleText("Accuracy");
+        axisY->setTitleText("Tokens/Second");
         axisY->setRange(0, 1);
     
         chart->addAxis(axisX, Qt::AlignBottom);
@@ -144,6 +164,12 @@ struct TrainingVisualizer::Private {
         layout->addWidget(chartView);
     
         tabWidget->addTab(widget, "Tokens");
+
+        // Store the tab data
+        TabData data;
+        data.chartView = chartView;
+        data.series = series;
+        tabData["Tokens"] = data;
     }
 
     void createLearningRateTab() {
@@ -153,7 +179,7 @@ struct TrainingVisualizer::Private {
         auto chart = new QChart();
         series = new QLineSeries(chart);
         chart->addSeries(series);
-        chart->setTitle("Training Accuracy Over Time");
+        chart->setTitle("Learning Rate Over Time");
     
         // Create axes
         auto axisX = new QDateTimeAxis;
@@ -161,7 +187,7 @@ struct TrainingVisualizer::Private {
         axisX->setFormat("hh:mm:ss");
         
         auto axisY = new QValueAxis;
-        axisY->setTitleText("Accuracy");
+        axisY->setTitleText("Learning Rate");
         axisY->setRange(0, 1);
     
         chart->addAxis(axisX, Qt::AlignBottom);
@@ -174,16 +200,22 @@ struct TrainingVisualizer::Private {
         layout->addWidget(chartView);
     
         tabWidget->addTab(widget, "Learning Rate");
+
+        // Store the tab data
+        TabData data;
+        data.chartView = chartView;
+        data.series = series;
+        tabData["Learning Rate"] = data;
     }
 
-    void createNormRateTab() {
+    void createLossTab() {
         auto widget = new QWidget();
         auto layout = new QVBoxLayout(widget);
     
         auto chart = new QChart();
         series = new QLineSeries(chart);
         chart->addSeries(series);
-        chart->setTitle("Training Accuracy Over Time");
+        chart->setTitle("Loss Over Time");
     
         // Create axes
         auto axisX = new QDateTimeAxis;
@@ -191,7 +223,7 @@ struct TrainingVisualizer::Private {
         axisX->setFormat("hh:mm:ss");
         
         auto axisY = new QValueAxis;
-        axisY->setTitleText("Accuracy");
+        axisY->setTitleText("Loss");
         axisY->setRange(0, 1);
     
         chart->addAxis(axisX, Qt::AlignBottom);
@@ -203,114 +235,123 @@ struct TrainingVisualizer::Private {
         chartView->setRenderHint(QPainter::Antialiasing);
         layout->addWidget(chartView);
     
-        tabWidget->addTab(widget, "Normalization Rate");
+        tabWidget->addTab(widget, "Loss");
+
+        // Store the tab data
+        TabData data;
+        data.chartView = chartView;
+        data.series = series;
+        tabData["Loss"] = data;
     }
 
     void loadDataFromFile(const QString& fileName) {
         QFile file(fileName);
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-            return;
-    
-        // Create a new series for the data
-        auto newSeries = new QLineSeries();
-        
-        QTextStream in(&file);
-        // Get header and find column indices
-        QString headerLine = in.readLine();
-        QStringList headers = headerLine.split(',');
-        
-        // Get current tab and determine which column to read
-        QString currentTab = tabWidget->tabText(tabWidget->currentIndex());
-        int dataColumnIndex = -1;
-        
-        // Map tab names to CSV column names
-        if (currentTab == "Accuracy") dataColumnIndex = headers.indexOf("accuracy");
-        else if (currentTab == "Perplexity") dataColumnIndex = headers.indexOf("perplexity");
-        else if (currentTab == "Tokens") dataColumnIndex = headers.indexOf("tokens_per_second");
-        else if (currentTab == "Learning Rate") dataColumnIndex = headers.indexOf("learning_rate");
-        
-        if (dataColumnIndex == -1) {
-            delete newSeries;
-            file.close();
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            qDebug() << "Failed to open file";
             return;
         }
     
+        // Create a mapping from tab names to CSV column names
+        QMap<QString, QString> tabToHeader {
+            {"Accuracy", "accuracy"},
+            {"Loss", "loss"},
+            {"Perplexity", "perplexity"},
+            {"Tokens", "tokens_per_second"},
+            {"Learning Rate", "learning_rate"},
+            {"Normalization Rate", "normalization_rate"}  // Adjust if needed
+        };
+    
+        // Prepare a map of tabName -> column index
+        QMap<QString, int> tabColumnIndex;
+        // Prepare a map of tabName -> new QLineSeries
+        QMap<QString, QLineSeries*> newSeriesMap;
+    
+        QTextStream in(&file);
+        QString headerLine = in.readLine();
+        QStringList headers = headerLine.split(',');
+    
+        // Identify each tab’s CSV column index and create its series
+        for (auto it = tabData.begin(); it != tabData.end(); ++it) {
+            QString tabName = it.key();
+            if (!tabToHeader.contains(tabName))
+                continue; // Skip if we don’t have a header mapping for this tab
+    
+            int colIndex = headers.indexOf(tabToHeader[tabName]);
+            if (colIndex < 0)
+                continue; // Skip if column not found in the CSV
+    
+            tabColumnIndex[tabName] = colIndex;
+            newSeriesMap[tabName] = new QLineSeries();
+        }
+    
+        // Read each line, parse timestamp & add data points for every tab that has a valid column
         while (!in.atEnd()) {
             QString line = in.readLine();
             QStringList fields = line.split(',');
-            
-            if (fields.size() > dataColumnIndex) {
-                // Parse timestamp
-                QDateTime timestamp = QDateTime::fromString(fields[0], "yyyy-MM-dd'T'HH:mm:ss");
-                if (!timestamp.isValid()) continue;
+            if (fields.size() < 2) continue;
     
-                // Check for NA and parse value
-                QString valueStr = fields[dataColumnIndex];
+            QDateTime timestamp = QDateTime::fromString(fields[0], "yyyy-MM-dd'T'HH:mm:ss");
+            if (!timestamp.isValid()) continue;
+    
+            // For each tab with a known column, parse and append data
+            for (auto it = tabColumnIndex.begin(); it != tabColumnIndex.end(); ++it) {
+                QString tabName = it.key();
+                int colIndex = it.value();
+                if (colIndex >= fields.size()) continue;
+    
+                QString valueStr = fields[colIndex];
                 if (valueStr == "NA") continue;
-                
+    
                 bool ok;
                 double value = valueStr.toDouble(&ok);
                 if (!ok) continue;
     
-                newSeries->append(timestamp.toMSecsSinceEpoch(), value);
+                newSeriesMap[tabName]->append(timestamp.toMSecsSinceEpoch(), value);
             }
         }
+        file.close();
     
-        if (newSeries->count() > 0) {
-            // Get current tab's chart
-            auto currentWidget = tabWidget->currentWidget();
-            auto chartView = currentWidget->findChild<QChartView*>();
-            if (!chartView) return;
+        // Update each tab’s chart
+        for (auto it = newSeriesMap.begin(); it != newSeriesMap.end(); ++it) {
+            QString tabName = it.key();
+            QLineSeries* series = it.value();
+            if (!series || series->count() == 0) {
+                delete series;
+                continue;
+            }
     
-            auto chart = chartView->chart();
-            
-            // Remove old series and add new one
+            auto& currentTabData = tabData[tabName];
+            QChart* chart = currentTabData.chartView->chart();
             chart->removeAllSeries();
-            chart->addSeries(newSeries);
-    
-            // Reattach axes
-            newSeries->attachAxis(chart->axes(Qt::Horizontal).first());
-            newSeries->attachAxis(chart->axes(Qt::Vertical).first());
+            chart->addSeries(series);
+            series->attachAxis(chart->axes(Qt::Horizontal).first());
+            series->attachAxis(chart->axes(Qt::Vertical).first());
     
             // Update X axis range
             auto xAxis = qobject_cast<QDateTimeAxis*>(chart->axes(Qt::Horizontal).first());
             if (xAxis) {
                 xAxis->setRange(
-                    QDateTime::fromMSecsSinceEpoch(newSeries->at(0).x()),
-                    QDateTime::fromMSecsSinceEpoch(newSeries->at(newSeries->count()-1).x())
+                    QDateTime::fromMSecsSinceEpoch(series->at(0).x()),
+                    QDateTime::fromMSecsSinceEpoch(series->at(series->count() - 1).x())
                 );
             }
     
             // Update Y axis range with padding
             double minY = std::numeric_limits<double>::max();
             double maxY = std::numeric_limits<double>::lowest();
-            for (int i = 0; i < newSeries->count(); ++i) {
-                double y = newSeries->at(i).y();
+            for (int i = 0; i < series->count(); ++i) {
+                double y = series->at(i).y();
                 minY = qMin(minY, y);
                 maxY = qMax(maxY, y);
             }
-    
-            // Add 10% padding to Y axis
             double padding = (maxY - minY) * 0.1;
             auto yAxis = qobject_cast<QValueAxis*>(chart->axes(Qt::Vertical).first());
             if (yAxis) {
-                // Ensure range stays within logical bounds for the current tab
-                QString currentTab = tabWidget->tabText(tabWidget->currentIndex());
-                if (currentTab == "Accuracy") {
-                    yAxis->setRange(
-                        qMax(0.0, minY - padding),
-                        qMin(1.0, maxY + padding)
-                    );
-                } else {
-                    yAxis->setRange(minY - padding, maxY + padding);
-                }
+                yAxis->setRange(minY - padding, maxY + padding);
             }
-        } else {
-            delete newSeries;
         }
-    
-        file.close();
     }
+
 
 };
 
