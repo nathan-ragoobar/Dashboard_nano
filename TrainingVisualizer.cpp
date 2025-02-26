@@ -21,6 +21,13 @@ struct TrainingVisualizer::Private {
         TabData() : chartView(nullptr), series(nullptr) {}
     };
 
+    struct RunData {
+        QString fileName;
+        QMap<QString, QLineSeries*> series; // Maps metric name to its series
+        QMap<QString, QColor> colors; // Store color for each metric in this run
+    };
+    
+    QMap<QString, RunData> runs; // Maps run name to its data
     std::unique_ptr<QMainWindow> window;
     QTabWidget* tabWidget;
     QMap<QString, TabData> tabData;
@@ -31,6 +38,7 @@ struct TrainingVisualizer::Private {
     QChartView* mainChartView;
     QMap<QString, QLineSeries*> metricSeries;
     QTableWidget* statsTable;
+    QMap<QString, bool> metricVisibility;  // Tracks whether each metric is visible
     /*
     void createUnifiedChart(QVBoxLayout* layout);
     void createStatisticsPanel(QVBoxLayout* layout);
@@ -67,12 +75,7 @@ struct TrainingVisualizer::Private {
         runLabel->setStyleSheet("font-weight: bold;");
         sidebarLayout->addWidget(runLabel);
         
-        // For demo purposes we'll add a fixed list of runs
-        // In a real app, you'd populate this dynamically
-        addRunCheckbox(sidebarLayout, "run-01", "#3366cc", true);
-        addRunCheckbox(sidebarLayout, "run-02", "#dc3912", false);
-        addRunCheckbox(sidebarLayout, "run-03", "#ff9900", false);
-        
+            
         sidebarLayout->addSpacing(20);
         
         // Add metrics selection section
@@ -87,6 +90,14 @@ struct TrainingVisualizer::Private {
         addMetricCheckbox(sidebarLayout, "Learning Rate", false);
         addMetricCheckbox(sidebarLayout, "Perplexity", false);
         addMetricCheckbox(sidebarLayout, "Tokens per Second", false);
+
+        // Initialize defaults for metric visibility settings
+        metricVisibility["Accuracy"] = true;
+        metricVisibility["Training Loss"] = false;
+        metricVisibility["Validation Loss"] = false;
+        metricVisibility["Learning Rate"] = false;
+        metricVisibility["Perplexity"] = false;
+        metricVisibility["Tokens per Second"] = false;
         
         sidebarLayout->addSpacing(20);
         
@@ -220,25 +231,11 @@ struct TrainingVisualizer::Private {
             pen.setWidth(2);
             series->setPen(pen);
             
+            // Hide template series from legend
+            series->setVisible(false);
+            
             // Store series for later reference
             metricSeries[metric] = series;
-            
-            // Add tooltip
-            QObject::connect(series, &QLineSeries::hovered, 
-                [this, series](const QPointF &point, bool state) {
-                    if (state) {
-                        QToolTip::showText(
-                            QCursor::pos(),
-                            QString("%1\nStep: %2\nValue: %3")
-                                .arg(series->name())
-                                .arg(int(point.x()))
-                                .arg(point.y(), 0, 'f', 4),
-                            nullptr
-                        );
-                    } else {
-                        QToolTip::hideText();
-                    }
-                });
         }
         
         // Create the chart view
@@ -279,7 +276,38 @@ struct TrainingVisualizer::Private {
         pixmap.fill(QColor(color));
         checkbox->setIcon(QIcon(pixmap));
         
-        layout->addWidget(checkbox);
+        // If layout is provided, add to it, otherwise find the runs layout
+        if (layout) {
+            layout->addWidget(checkbox);
+        } else {
+            // Find the sidebar layout with runs
+            // This is a bit hacky but works for this demo
+            auto centralWidget = window->centralWidget();
+            if (centralWidget) {
+                auto mainLayout = centralWidget->layout();
+                if (mainLayout) {
+                    auto sidebarWidget = mainLayout->itemAt(0)->widget();
+                    if (sidebarWidget) {
+                        auto sidebarLayout = qobject_cast<QVBoxLayout*>(sidebarWidget->layout());
+                        if (sidebarLayout) {
+                            // Find the "Runs" label
+                            for (int i = 0; i < sidebarLayout->count(); ++i) {
+                                auto item = sidebarLayout->itemAt(i);
+                                if (item && item->widget()) {
+                                    auto label = qobject_cast<QLabel*>(item->widget());
+                                    if (label && label->text() == "Runs") {
+                                        // Found the Runs label, insert after it
+                                        // Use insertItem instead of insertWidget
+                                        sidebarLayout->insertWidget(i + 1, checkbox);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         
         // Connect checkbox to show/hide this run's data
         QObject::connect(checkbox, &QCheckBox::toggled, 
@@ -289,25 +317,39 @@ struct TrainingVisualizer::Private {
     }
     
     void addMetricCheckbox(QVBoxLayout* layout, const QString& name, bool checked) {
+        metricVisibility[name] = checked;  // Store the initial state
+        
         auto checkbox = new QCheckBox(name);
         checkbox->setChecked(checked);
+        checkbox->setStyleSheet("color: white;");
         layout->addWidget(checkbox);
         
-        // Connect checkbox to show/hide this metric
         QObject::connect(checkbox, &QCheckBox::toggled, 
             [this, name](bool checked) {
-                if (metricSeries.contains(name)) {
-                    metricSeries[name]->setVisible(checked);
-                    updateStatisticsTable();
+                metricVisibility[name] = checked;  // Update the state
+                
+                // Update the series in all runs
+                for (auto runIt = runs.begin(); runIt != runs.end(); ++runIt) {
+                    RunData &runData = runIt.value();
+                    if (runData.series.contains(name)) {
+                        runData.series[name]->setVisible(checked);
+                    }
                 }
+                
+                updateStatisticsTable();
             });
     }
     
     void toggleRunVisibility(const QString& run, bool visible) {
-        // In a real implementation, this would filter data by run ID
-        // For now, we'll just show/hide all data
-        for (auto series : metricSeries) {
-            series->setVisible(visible);
+        // If run exists in our runs map, toggle visibility of its series
+        if (runs.contains(run)) {
+            RunData &runData = runs[run];
+            for (auto it = runData.series.begin(); it != runData.series.end(); ++it) {
+                const QString& metricName = it.key();
+                // Only make the series visible if both the run AND the metric are supposed to be visible
+                bool shouldBeVisible = visible && metricVisibility.value(metricName, false);
+                it.value()->setVisible(shouldBeVisible);
+            }
         }
         updateStatisticsTable();
     }
@@ -334,14 +376,53 @@ struct TrainingVisualizer::Private {
         lastFileName = fileName;
         
         QObject::connect(&fileWatcher, &QFileSystemWatcher::fileChanged, [this](const QString &path){
-            loadDataFromFile(path);
+            // Reload the specific run that changed
+            QString runName = "";
+            for (auto it = runs.begin(); it != runs.end(); ++it) {
+                if (it.value().fileName == path) {
+                    runName = it.key();
+                    break;
+                }
+            }
+            
+            if (!runName.isEmpty()) {
+                loadDataFromFile(path, runName);
+            }
         });
         
+        // Generate a run name from the filename
+        QFileInfo fileInfo(fileName);
+        QString runName = fileInfo.baseName();
+        
+        // Check if this run already exists, and if so, append a number
+        QString baseRunName = runName;
+        int counter = 1;
+        while (runs.contains(runName)) {
+            runName = QString("%1-%2").arg(baseRunName).arg(counter++);
+        }
+        
+        loadDataFromFile(fileName, runName);
+        
+        // Add a checkbox for this run if it's new
+        QColor runColor = getUniqueColor(runs.size()); // You'll need to implement this function
+        addRunCheckbox(nullptr, runName, runColor.name(), true); // Will need to modify addRunCheckbox
+    }
+    
+    // New overload to load a specific run
+    void loadDataFromFile(const QString& fileName, const QString& runName) {
         QFile file(fileName);
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
             qDebug() << "Failed to open file";
             return;
         }
+        
+        // Create or get run data
+        if (!runs.contains(runName)) {
+            RunData newRun;
+            newRun.fileName = fileName;
+            runs[runName] = newRun;
+        }
+        RunData &runData = runs[runName];
         
         // Create a mapping from metric names to CSV column names
         QMap<QString, QString> metricToHeader {
@@ -353,10 +434,15 @@ struct TrainingVisualizer::Private {
             {"Learning Rate", "learning_rate"}
         };
         
-        // Clear existing data in all series
-        for (auto series : metricSeries) {
-            series->clear();
+        // Remove any existing series for this run
+        for (auto it = runData.series.begin(); it != runData.series.end(); ++it) {
+            auto series = it.value();
+            if (series) {
+                mainChartView->chart()->removeSeries(series);
+                delete series;
+            }
         }
+        runData.series.clear();
         
         // Read and parse the CSV
         QTextStream in(&file);
@@ -379,13 +465,69 @@ struct TrainingVisualizer::Private {
             int colIndex = headers.indexOf(headerName);
             if (colIndex >= 0) {
                 metricColumnIndex[metricName] = colIndex;
+                
+                // Create a new series for this metric
+                auto series = new QLineSeries(mainChartView->chart());
+                series->setName(QString("%1 - %2").arg(runName).arg(metricName));
+                
+                // Set color if already defined, otherwise generate a new one
+                QColor color;
+                if (runData.colors.contains(metricName)) {
+                    color = runData.colors[metricName];
+                } else {
+                    // For consistency, assign the standard color for this metric
+                    if (metricName == "Accuracy") color = QColor("#3366cc");
+                    else if (metricName == "Training Loss") color = QColor("#dc3912");
+                    else if (metricName == "Validation Loss") color = QColor("#ff9900");
+                    else if (metricName == "Learning Rate") color = QColor("#109618");
+                    else if (metricName == "Perplexity") color = QColor("#990099");
+                    else if (metricName == "Tokens per Second") color = QColor("#0099c6");
+                    runData.colors[metricName] = color;
+                }
+                
+                QPen pen = series->pen();
+                pen.setColor(color);
+                pen.setWidth(2);
+                series->setPen(pen);
+                
+                mainChartView->chart()->addSeries(series);
+                
+                // Attach to axes
+                auto axes = mainChartView->chart()->axes();
+                for (auto axis : axes) {
+                    if (axis->orientation() == Qt::Horizontal)
+                        series->attachAxis(axis);
+                    else if (axis->orientation() == Qt::Vertical)
+                        series->attachAxis(axis);
+                }
+                
+                series->setVisible(metricVisibility.value(metricName, false));
+                runData.series[metricName] = series;
+                
+                // Add tooltip similar to existing code
+                QObject::connect(series, &QLineSeries::hovered, 
+                    [this, series](const QPointF &point, bool state) {
+                        if (state) {
+                            QToolTip::showText(
+                                QCursor::pos(),
+                                QString("%1\nStep: %2\nValue: %3")
+                                    .arg(series->name())
+                                    .arg(int(point.x()))
+                                    .arg(point.y(), 0, 'f', 4),
+                                nullptr
+                            );
+                        } else {
+                            QToolTip::hideText();
+                        }
+                    });
             }
         }
         
-        // Read each line and populate series data
-        int currentStep = 0;  // Fallback
+        // Read data and populate series
         double minY = std::numeric_limits<double>::max();
         double maxY = std::numeric_limits<double>::lowest();
+        double minX = std::numeric_limits<double>::max();
+        double maxX = std::numeric_limits<double>::lowest();
         
         while (!in.atEnd()) {
             QString line = in.readLine();
@@ -395,16 +537,19 @@ struct TrainingVisualizer::Private {
             // Get step value
             bool ok;
             double step = fields[stepsIndex].toDouble(&ok);
-            if (!ok) {
-                step = currentStep++;
-            }
+            if (!ok) continue;
+            
+            minX = qMin(minX, step);
+            maxX = qMax(maxX, step);
             
             // For each metric with a valid column index, add data to its series
             for (auto it = metricColumnIndex.begin(); it != metricColumnIndex.end(); ++it) {
                 QString metricName = it.key();
                 int colIndex = it.value();
                 
-                if (colIndex >= fields.size()) continue;
+                if (!runData.series.contains(metricName) || colIndex >= fields.size())
+                    continue;
+                
                 QString valueStr = fields[colIndex];
                 if (valueStr == "NA") continue;
                 
@@ -412,7 +557,7 @@ struct TrainingVisualizer::Private {
                 double value = valueStr.toDouble(&ok);
                 if (!ok) continue;
                 
-                metricSeries[metricName]->append(step, value);
+                runData.series[metricName]->append(step, value);
                 
                 // Track min/max for Y axis scaling
                 minY = qMin(minY, value);
@@ -421,100 +566,129 @@ struct TrainingVisualizer::Private {
         }
         file.close();
         
-        // Adjust Y axis range with some padding
-        if (maxY > minY) {
-            double padding = (maxY - minY) * 0.1;
-            auto chart = mainChartView->chart();
-            auto yAxis = qobject_cast<QValueAxis*>(chart->axes(Qt::Vertical).first());
-            if (yAxis) {
-                yAxis->setRange(minY - padding, maxY + padding);
-            }
-            
-            // Also adjust X axis to show full range of steps
-            auto xAxis = qobject_cast<QValueAxis*>(chart->axes(Qt::Horizontal).first());
-            if (xAxis && !metricSeries["Accuracy"]->points().isEmpty()) {
-                double minX = metricSeries["Accuracy"]->points().first().x();
-                double maxX = metricSeries["Accuracy"]->points().last().x();
-                double padding = (maxX - minX) * 0.05;
-                xAxis->setRange(minX - padding, maxX + padding);
-            }
-        }
+        // Update axis ranges to accommodate all data
+        updateAxisRanges();
         
         // Update statistics table
         updateStatisticsTable();
     }
     
-    void updateStatisticsTable() {
-        statsTable->setRowCount(0);  // Clear existing rows
+    QColor getUniqueColor(int index) {
+        // A list of distinguishable colors
+        static const QList<QColor> colors = {
+            QColor("#3366cc"), QColor("#dc3912"), QColor("#ff9900"),
+            QColor("#109618"), QColor("#990099"), QColor("#0099c6"),
+            QColor("#dd4477"), QColor("#66aa00"), QColor("#b82e2e"),
+            QColor("#316395"), QColor("#994499"), QColor("#22aa99")
+        };
         
-        // Add a row for each visible series
-        for (auto it = metricSeries.begin(); it != metricSeries.end(); ++it) {
-            QString metricName = it.key();
-            QLineSeries* series = it.value();
+        return colors[index % colors.size()];
+    }
+
+    void updateAxisRanges() {
+        double minY = std::numeric_limits<double>::max();
+        double maxY = std::numeric_limits<double>::lowest();
+        double minX = std::numeric_limits<double>::max();
+        double maxX = std::numeric_limits<double>::lowest();
+        bool hasData = false;
+        
+        // Check all series from all runs
+        for (auto runIt = runs.begin(); runIt != runs.end(); ++runIt) {
+            const RunData& runData = runIt.value();
             
-            if (!series->isVisible() || series->count() == 0) {
-                continue;
-            }
-            
-            int row = statsTable->rowCount();
-            statsTable->insertRow(row);
-            
-            // Column 0: Run/Metric name with color
-            QTableWidgetItem* nameItem = new QTableWidgetItem(metricName);
-            QColor color = series->pen().color();
-            QPixmap pixmap(16, 16);
-            pixmap.fill(color);
-            nameItem->setIcon(QIcon(pixmap));
-            statsTable->setItem(row, 0, nameItem);
-            
-            // Calculate statistics
-            double min = std::numeric_limits<double>::max();
-            double max = std::numeric_limits<double>::lowest();
-            double sum = 0;
-            double last = 0;
-            int steps = 0;
-            
-            for (int i = 0; i < series->count(); ++i) {
-                double value = series->at(i).y();
-                min = qMin(min, value);
-                max = qMax(max, value);
-                sum += value;
-                if (i == series->count() - 1) {
-                    last = value;
-                    steps = static_cast<int>(series->at(i).x());
-                }
-            }
-            
-            double mean = sum / series->count();
-            
-            // Column 1: Min
-            statsTable->setItem(row, 1, new QTableWidgetItem(QString::number(min, 'f', 4)));
-            
-            // Column 2: Max
-            statsTable->setItem(row, 2, new QTableWidgetItem(QString::number(max, 'f', 4)));
-            
-            // Column 3: Mean
-            statsTable->setItem(row, 3, new QTableWidgetItem(QString::number(mean, 'f', 4)));
-            
-            // Column 4: Last
-            statsTable->setItem(row, 4, new QTableWidgetItem(QString::number(last, 'f', 4)));
-            
-            // Column 5: Steps
-            statsTable->setItem(row, 5, new QTableWidgetItem(QString::number(steps)));
-            
-            /*
-            // Set background color for alternating rows
-            if (row % 2 == 1) {
-                for (int col = 0; col < statsTable->columnCount(); ++col) {
-                    if (statsTable->item(row, col)) {
-                        statsTable->item(row, col)->setBackground(QColor("#f9f9f9"));
+            for (auto seriesIt = runData.series.begin(); seriesIt != runData.series.end(); ++seriesIt) {
+                auto series = seriesIt.value();
+                if (series->count() > 0) {
+                    hasData = true;
+                    
+                    for (int i = 0; i < series->count(); ++i) {
+                        minX = qMin(minX, series->at(i).x());
+                        maxX = qMax(maxX, series->at(i).x());
+                        minY = qMin(minY, series->at(i).y());
+                        maxY = qMax(maxY, series->at(i).y());
                     }
                 }
             }
-                */
+        }
+        
+        // Adjust axis ranges if we have data
+        if (hasData) {
+            double paddingY = (maxY - minY) * 0.1;
+            double paddingX = (maxX - minX) * 0.05;
+            
+            auto chart = mainChartView->chart();
+            auto yAxis = qobject_cast<QValueAxis*>(chart->axes(Qt::Vertical).first());
+            auto xAxis = qobject_cast<QValueAxis*>(chart->axes(Qt::Horizontal).first());
+            
+            if (yAxis) {
+                yAxis->setRange(minY - paddingY, maxY + paddingY);
+            }
+            
+            if (xAxis) {
+                xAxis->setRange(minX - paddingX, maxX + paddingX);
+            }
         }
     }
-}; // End of Private struct definition
+
+    void updateStatisticsTable() {
+        statsTable->setRowCount(0);  // Clear existing rows
+        
+        // Add a row for each visible series from each run
+        for (auto runIt = runs.begin(); runIt != runs.end(); ++runIt) {
+            const QString& runName = runIt.key();
+            const RunData& runData = runIt.value();
+            
+            for (auto seriesIt = runData.series.begin(); seriesIt != runData.series.end(); ++seriesIt) {
+                const QString& metricName = seriesIt.key();
+                QLineSeries* series = seriesIt.value();
+                
+                if (!series->isVisible() || series->count() == 0) {
+                    continue;
+                }
+                
+                int row = statsTable->rowCount();
+                statsTable->insertRow(row);
+                
+                // Column 0: Run/Metric name with color
+                QString displayName = QString("%1 - %2").arg(runName).arg(metricName);
+                QTableWidgetItem* nameItem = new QTableWidgetItem(displayName);
+                QColor color = series->pen().color();
+                QPixmap pixmap(16, 16);
+                pixmap.fill(color);
+                nameItem->setIcon(QIcon(pixmap));
+                statsTable->setItem(row, 0, nameItem);
+                
+                // Calculate statistics
+                double min = std::numeric_limits<double>::max();
+                double max = std::numeric_limits<double>::lowest();
+                double sum = 0;
+                double last = 0;
+                int steps = 0;
+                
+                for (int i = 0; i < series->count(); ++i) {
+                    double value = series->at(i).y();
+                    min = qMin(min, value);
+                    max = qMax(max, value);
+                    sum += value;
+                    if (i == series->count() - 1) {
+                        last = value;
+                        steps = static_cast<int>(series->at(i).x());
+                    }
+                }
+                
+                double mean = sum / series->count();
+                
+                // Fill in the statistics
+                statsTable->setItem(row, 1, new QTableWidgetItem(QString::number(min, 'f', 4)));
+                statsTable->setItem(row, 2, new QTableWidgetItem(QString::number(max, 'f', 4)));
+                statsTable->setItem(row, 3, new QTableWidgetItem(QString::number(mean, 'f', 4)));
+                statsTable->setItem(row, 4, new QTableWidgetItem(QString::number(last, 'f', 4)));
+                statsTable->setItem(row, 5, new QTableWidgetItem(QString::number(steps)));
+            }
+        }
+    }
+
+};
 
 // Define TrainingVisualizer class methods outside of the Private struct
 bool TrainingVisualizer::initialize(int& argc, char** argv) {
