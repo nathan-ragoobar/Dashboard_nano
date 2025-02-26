@@ -39,6 +39,7 @@ struct TrainingVisualizer::Private {
     QMap<QString, QLineSeries*> metricSeries;
     QTableWidget* statsTable;
     QMap<QString, bool> metricVisibility;  // Tracks whether each metric is visible
+    QMap<QString, bool> runVisibility;  // Tracks whether each run is visible
     /*
     void createUnifiedChart(QVBoxLayout* layout);
     void createStatisticsPanel(QVBoxLayout* layout);
@@ -328,11 +329,16 @@ struct TrainingVisualizer::Private {
             [this, name](bool checked) {
                 metricVisibility[name] = checked;  // Update the state
                 
-                // Update the series in all runs
+                // Update the series in all runs based on both metric and run visibility
                 for (auto runIt = runs.begin(); runIt != runs.end(); ++runIt) {
+                    QString runName = runIt.key();
                     RunData &runData = runIt.value();
                     if (runData.series.contains(name)) {
-                        runData.series[name]->setVisible(checked);
+                        // Check if this run should be visible
+                        bool runIsVisible = runVisibility.value(runName, true);
+                        
+                        // Only make the series visible if BOTH the run and metric are visible
+                        runData.series[name]->setVisible(checked && runIsVisible);
                     }
                 }
                 
@@ -341,6 +347,9 @@ struct TrainingVisualizer::Private {
     }
     
     void toggleRunVisibility(const QString& run, bool visible) {
+        // Store the run visibility state
+        runVisibility[run] = visible;
+        
         // If run exists in our runs map, toggle visibility of its series
         if (runs.contains(run)) {
             RunData &runData = runs[run];
@@ -421,6 +430,7 @@ struct TrainingVisualizer::Private {
             RunData newRun;
             newRun.fileName = fileName;
             runs[runName] = newRun;
+            runVisibility[runName] = true;  // Initialize run visibility as true
         }
         RunData &runData = runs[runName];
         
