@@ -1,0 +1,9 @@
+C:/Code3020/Dashboard/build/CMakeFiles/Dashboard.dir
+C:/Code3020/Dashboard/build/CMakeFiles/edit_cache.dir
+C:/Code3020/Dashboard/build/CMakeFiles/rebuild_cache.dir
+C:/Code3020/Dashboard/build/CMakeFiles/list_install_components.dir
+C:/Code3020/Dashboard/build/CMakeFiles/install.dir
+C:/Code3020/Dashboard/build/CMakeFiles/install/local.dir
+C:/Code3020/Dashboard/build/CMakeFiles/install/strip.dir
+C:/Code3020/Dashboard/build/CMakeFiles/Dashboard_autogen_timestamp_deps.dir
+C:/Code3020/Dashboard/build/CMakeFiles/Dashboard_autogen.dir

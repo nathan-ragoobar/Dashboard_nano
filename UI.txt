@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 700">
+  <!-- Background -->
+  <rect width="1000" height="700" fill="#f5f5f7" />
+  
+  <!-- App Window -->
+  <rect x="10" y="10" width="980" height="680" rx="10" fill="#ffffff" stroke="#e0e0e0" stroke-width="2" />
+  
+  <!-- Header Bar -->
+  <rect x="10" y="10" width="980" height="40" rx="10" fill="#2a3f5f" />
+  <text x="30" y="35" font-family="Arial" font-size="18" font-weight="bold" fill="#ffffff">MetricViz</text>
+  
+  <!-- Simple Project Selector -->
+  <rect x="130" y="15" width="150" height="30" rx="5" fill="#1e2f48" />
+  <text x="145" y="35" font-family="Arial" font-size="14" fill="#ffffff">MyProject ▼</text>
+  
+  <!-- Minimalist Controls -->
+  <rect x="820" y="15" width="150" height="30" rx="5" fill="#1e2f48" />
+  <text x="835" y="35" font-family="Arial" font-size="14" fill="#ffffff">Export</text>
+  <text x="900" y="35" font-family="Arial" font-size="14" fill="#ffffff">Settings</text>
+  
+  <!-- Simple Left Sidebar -->
+  <rect x="10" y="50" width="180" height="640" fill="#ffffff" stroke="#e0e0e0" stroke-width="1" />
+  
+  <!-- Run Selection -->
+  <text x="25" y="80" font-family="Arial" font-size="14" font-weight="bold" fill="#333333">Runs</text>
+  
+  <!-- Simplified Run List -->
+  <rect x="25" y="95" width="16" height="16" fill="#3366cc" />
+  <text x="50" y="108" font-family="Arial" font-size="14" fill="#333333">run-01</text>
+  
+  <rect x="25" y="125" width="16" height="16" fill="#dc3912" />
+  <text x="50" y="138" font-family="Arial" font-size="14" fill="#333333">run-02</text>
+  
+  <rect x="25" y="155" width="16" height="16" fill="#ffffff" stroke="#ff9900" stroke-width="2" />
+  <text x="50" y="168" font-family="Arial" font-size="14" fill="#333333">run-03</text>
+  
+  <!-- Metric Selection -->
+  <text x="25" y="210" font-family="Arial" font-size="14" font-weight="bold" fill="#333333">Metrics</text>
+  
+  <rect x="25" y="225" width="16" height="16" fill="#ffffff" stroke="#333333" stroke-width="2" />
+  <rect x="25" y="225" width="16" height="16" fill="#333333" />
+  <text x="50" y="238" font-family="Arial" font-size="14" fill="#333333">Accuracy</text>
+  
+  <rect x="25" y="255" width="16" height="16" fill="#ffffff" stroke="#333333" stroke-width="2" />
+  <text x="50" y="268" font-family="Arial" font-size="14" fill="#333333">Loss</text>
+  
+  <rect x="25" y="285" width="16" height="16" fill="#ffffff" stroke="#333333" stroke-width="2" />
+  <text x="50" y="298" font-family="Arial" font-size="14" fill="#333333">Gradients</text>
+  
+  <!-- Smoothing Control -->
+  <text x="25" y="340" font-family="Arial" font-size="14" font-weight="bold" fill="#333333">Smoothing</text>
+  <rect x="25" y="360" width="140" height="4" rx="2" fill="#e6e6e6" />
+  <rect x="25" y="360" width="70" height="4" rx="2" fill="#2a3f5f" />
+  <circle cx="95" cy="362" r="6" fill="#2a3f5f" />
+  <text x="150" y="365" font-family="Arial" font-size="12" fill="#333333">0.5</text>
+  
+  <!-- Main Content Area -->
+  <rect x="190" y="50" width="800" height="640" fill="#ffffff" />
+  
+  <!-- Chart Title -->
+  <text x="210" y="80" font-family="Arial" font-size="16" font-weight="bold" fill="#333333">Training Accuracy</text>
+  
+  <!-- Main Chart Area -->
+  <rect x="210" y="100" width="760" height="380" fill="#ffffff" stroke="#e0e0e0" stroke-width="1" />
+  
+  <!-- X and Y Axes -->
+  <line x1="250" y1="440" x2="950" y2="440" stroke="#333333" stroke-width="1" />
+  <line x1="250" y1="140" x2="250" y2="440" stroke="#333333" stroke-width="1" />
+  
+  <!-- X Axis Labels - Simplified -->
+  <text x="250" y="460" font-family="Arial" font-size="12" fill="#666666">0</text>
+  <text x="600" y="460" font-family="Arial" font-size="12" fill="#666666">10K</text>
+  <text x="950" y="460" font-family="Arial" font-size="12" fill="#666666">20K</text>
+  <text x="600" y="480" font-family="Arial" font-size="14" fill="#666666">Steps</text>
+  
+  <!-- Y Axis Labels - Simplified -->
+  <text x="230" y="440" font-family="Arial" font-size="12" fill="#666666">0.0</text>
+  <text x="230" y="290" font-family="Arial" font-size="12" fill="#666666">0.5</text>
+  <text x="230" y="140" font-family="Arial" font-size="12" fill="#666666">1.0</text>
+  
+  <!-- Data Lines - Simplified -->
+  <path d="M250,420 Q350,390 450,350 T650,280 T850,210 T950,180" stroke="#3366cc" stroke-width="2.5" fill="none" />
+  <path d="M250,400 Q350,370 450,320 T650,240 T850,170 T950,150" stroke="#dc3912" stroke-width="2.5" fill="none" />
+  
+  <!-- Legend - Minimalist -->
+  <rect x="700" y="110" width="250" height="70" rx="5" fill="#f9f9f9" stroke="#e0e0e0" stroke-width="1" />
+  
+  <rect x="720" y="125" width="16" height="16" fill="#3366cc" />
+  <text x="745" y="138" font-family="Arial" font-size="12" fill="#333333">run-01</text>
+  
+  <rect x="720" y="155" width="16" height="16" fill="#dc3912" />
+  <text x="745" y="168" font-family="Arial" font-size="12" fill="#333333">run-02</text>
+  
+  <!-- Simple Statistics Panel -->
+  <rect x="210" y="500" width="760" height="170" fill="#ffffff" stroke="#e0e0e0" stroke-width="1" />
+  
+  <!-- Simple Table Headers -->
+  <rect x="210" y="500" width="760" height="30" fill="#f0f0f0" />
+  <text x="230" y="520" font-family="Arial" font-size="12" font-weight="bold" fill="#333333">Run</text>
+  <text x="350" y="520" font-family="Arial" font-size="12" font-weight="bold" fill="#333333">Min</text>
+  <text x="450" y="520" font-family="Arial" font-size="12" font-weight="bold" fill="#333333">Max</text>
+  <text x="550" y="520" font-family="Arial" font-size="12" font-weight="bold" fill="#333333">Mean</text>
+  <text x="650" y="520" font-family="Arial" font-size="12" font-weight="bold" fill="#333333">Last</text>
+  <text x="750" y="520" font-family="Arial" font-size="12" font-weight="bold" fill="#333333">Steps</text>
+  
+  <!-- Row 1 -->
+  <rect x="210" y="530" width="760" height="30" fill="#ffffff" />
+  <rect x="230" y="537" width="16" height="16" fill="#3366cc" />
+  <text x="255" y="550" font-family="Arial" font-size="12" fill="#333333">run-01</text>
+  <text x="350" y="550" font-family="Arial" font-size="12" fill="#333333">0.02</text>
+  <text x="450" y="550" font-family="Arial" font-size="12" fill="#333333">0.85</text>
+  <text x="550" y="550" font-family="Arial" font-size="12" fill="#333333">0.63</text>
+  <text x="650" y="550" font-family="Arial" font-size="12" fill="#333333">0.85</text>
+  <text x="750" y="550" font-family="Arial" font-size="12" fill="#333333">20K</text>
+  
+  <!-- Row 2 -->
+  <rect x="210" y="560" width="760" height="30" fill="#f9f9f9" />
+  <rect x="230" y="567" width="16" height="16" fill="#dc3912" />
+  <text x="255" y="580" font-family="Arial" font-size="12" fill="#333333">run-02</text>
+  <text x="350" y="580" font-family="Arial" font-size="12" fill="#333333">0.04</text>
+  <text x="450" y="580" font-family="Arial" font-size="12" fill="#333333">0.88</text>
+  <text x="550" y="580" font-family="Arial" font-size="12" fill="#333333">0.68</text>
+  <text x="650" y="580" font-family="Arial" font-size="12" fill="#333333">0.88</text>
+  <text x="750" y="580" font-family="Arial" font-size="12" fill="#333333">20K</text>
+</svg>
