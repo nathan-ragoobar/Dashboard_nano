@@ -482,18 +482,39 @@ struct TrainingVisualizer::Private {
                 
                 // Set color if already defined, otherwise generate a new one
                 QColor color;
-                if (runData.colors.contains(metricName)) {
-                    color = runData.colors[metricName];
-                } else {
-                    // For consistency, assign the standard color for this metric
-                    if (metricName == "Accuracy") color = QColor("#3366cc");
-                    else if (metricName == "Training Loss") color = QColor("#dc3912");
-                    else if (metricName == "Validation Loss") color = QColor("#ff9900");
-                    else if (metricName == "Learning Rate") color = QColor("#109618");
-                    else if (metricName == "Perplexity") color = QColor("#990099");
-                    else if (metricName == "Tokens per Second") color = QColor("#0099c6");
-                    runData.colors[metricName] = color;
+
+                // Store a base color for this run if not already assigned
+                if (!runData.colors.contains("_baseColor")) {
+                    // Generate a unique color for this run using the run index
+                    int runIndex = 0;
+                    for (auto it = runs.begin(); it != runs.end(); ++it) {
+                        if (it.key() == runName) break;
+                        runIndex++;
+                    }
+                    runData.colors["_baseColor"] = getUniqueColor(runIndex);
                 }
+
+                // Get the base run color
+                color = runData.colors["_baseColor"];
+                                
+                // Apply slight variations based on the metric for better distinction
+                if (metricName == "Training Loss") {
+                    color = color.darker(115);  // Slightly darker
+                } else if (metricName == "Validation Loss") {
+                    color = color.lighter(115);  // Slightly lighter
+                } else if (metricName == "Learning Rate") {
+                    // Add green tint
+                    color.setGreen(qMin(255, color.green() + 30));
+                } else if (metricName == "Perplexity") {
+                    // Add blue tint
+                    color.setBlue(qMin(255, color.blue() + 30));
+                } else if (metricName == "Tokens per Second") {
+                    // Add red tint
+                    color.setRed(qMin(255, color.red() + 30));
+                }
+
+                // Store the specific color for this metric in this run
+                runData.colors[metricName] = color;
                 
                 QPen pen = series->pen();
                 pen.setColor(color);
