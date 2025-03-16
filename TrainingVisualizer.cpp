@@ -11,6 +11,9 @@
 #include <QHeaderView>
 #include <QLabel>
 #include <QPixmap>
+#include <QtConcurrent/QtConcurrent>
+#include <QFutureWatcher>
+#include <QProgressDialog>
 
 std::unique_ptr<QApplication> TrainingVisualizer::app;
 
@@ -40,6 +43,8 @@ struct TrainingVisualizer::Private {
     QTableWidget* statsTable;
     QMap<QString, bool> metricVisibility;  // Tracks whether each metric is visible
     QMap<QString, bool> runVisibility;  // Tracks whether each run is visible
+    QFutureWatcher<void>* fileLoadWatcher = nullptr;
+    QProgressDialog* progressDialog = nullptr;
     /*
     void createUnifiedChart(QVBoxLayout* layout);
     void createStatisticsPanel(QVBoxLayout* layout);
@@ -417,8 +422,42 @@ struct TrainingVisualizer::Private {
         addRunCheckbox(nullptr, runName, runColor.name(), true); // Will need to modify addRunCheckbox
     }
     
-    // New overload to load a specific run
+   
+   //modify to use async loading
     void loadDataFromFile(const QString& fileName, const QString& runName) {
+        // Show a loading indicator
+        if (!progressDialog) {
+            progressDialog = new QProgressDialog("Loading data...", "Cancel", 0, 0, window.get());
+            progressDialog->setWindowModality(Qt::WindowModal);
+        }
+        
+        progressDialog->setLabelText(QString("Loading %1...").arg(runName));
+        progressDialog->show();
+        
+        // Setup the future watcher if not already done
+        if (!fileLoadWatcher) {
+            fileLoadWatcher = new QFutureWatcher<void>();
+            QObject::connect(fileLoadWatcher, &QFutureWatcher<void>::finished, [this]() {
+                progressDialog->hide();
+                updateAxisRanges();
+                updateStatisticsTable();
+            });
+            
+            QObject::connect(progressDialog, &QProgressDialog::canceled, [this]() {
+                fileLoadWatcher->cancel();
+            });
+        }
+        
+        // Start the loading process in a separate thread
+        QFuture<void> future = QtConcurrent::run([this, fileName, runName]() {
+            processFile(fileName, runName);
+        });
+        
+        fileLoadWatcher->setFuture(future);
+    }
+
+    // Create a new method to process the file (called from background thread)
+    void processFile(const QString& fileName, const QString& runName) {
         QFile file(fileName);
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
             qDebug() << "Failed to open file";

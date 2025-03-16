@@ -1,0 +1,19 @@
+# ninja log v6
+17277	29956	7633083494267042	CMakeFiles/Dashboard.dir/mainwindow.cpp.obj	eff285eaf87127ab
+31722	34036	7633083638716203	Dashboard.exe	e620b59f06f150d
+17264	28808	7633083494140209	CMakeFiles/Dashboard.dir/Dashboard_autogen/mocs_compilation.cpp.obj	142aaa5e678c61d6
+17270	18066	7633083494216708	CMakeFiles/Dashboard.dir/main.cpp.obj	3425f1a416572948
+46	17262	7633083492275665	C:/Code3020/Dashboard/build/Dashboard_autogen/mocs_compilation.cpp	300b4881bd2ca545
+17281	31722	7633083494312376	CMakeFiles/Dashboard.dir/TrainingVisualizer.cpp.obj	ec44416fc0bb3777
+46	17262	7633083492275665	Dashboard_autogen/mocs_compilation.cpp	300b4881bd2ca545
+46	17262	7633083492275665	C:/Code3020/Dashboard/build/Dashboard_autogen/timestamp	300b4881bd2ca545
+46	17262	7633083492275665	Dashboard_autogen/timestamp	300b4881bd2ca545
+34	8130	7633939084023825	Dashboard_autogen/timestamp	300b4881bd2ca545
+34	8130	7633939084023825	Dashboard_autogen/mocs_compilation.cpp	300b4881bd2ca545
+34	8130	7633939084023825	C:/Code3020/Dashboard/build/Dashboard_autogen/timestamp	300b4881bd2ca545
+34	8130	7633939084023825	C:/Code3020/Dashboard/build/Dashboard_autogen/mocs_compilation.cpp	300b4881bd2ca545
+8135	8556	7633939085200789	CMakeFiles/Dashboard.dir/main.cpp.obj	3425f1a416572948
+8131	14377	7633939085165643	CMakeFiles/Dashboard.dir/Dashboard_autogen/mocs_compilation.cpp.obj	142aaa5e678c61d6
+8138	14868	7633939085231699	CMakeFiles/Dashboard.dir/mainwindow.cpp.obj	eff285eaf87127ab
+8141	15796	7633939085272145	CMakeFiles/Dashboard.dir/TrainingVisualizer.cpp.obj	ec44416fc0bb3777
+15796	16935	7633939161822770	Dashboard.exe	e620b59f06f150d
